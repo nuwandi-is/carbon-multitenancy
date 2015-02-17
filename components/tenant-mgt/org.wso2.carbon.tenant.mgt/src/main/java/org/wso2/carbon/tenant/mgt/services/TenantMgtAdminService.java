@@ -17,6 +17,7 @@ package org.wso2.carbon.tenant.mgt.services;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.core.AbstractAdmin;
 import org.wso2.carbon.registry.core.session.UserRegistry;
 import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
@@ -25,7 +26,6 @@ import org.wso2.carbon.stratos.common.util.ClaimsMgtUtil;
 import org.wso2.carbon.stratos.common.util.CommonUtil;
 import org.wso2.carbon.tenant.mgt.beans.PaginatedTenantInfoBean;
 import org.wso2.carbon.tenant.mgt.core.TenantPersistor;
-import org.wso2.carbon.tenant.mgt.core.internal.TenantMgtCoreServiceComponent;
 import org.wso2.carbon.tenant.mgt.internal.TenantMgtServiceComponent;
 import org.wso2.carbon.tenant.mgt.util.TenantMgtUtil;
 import org.wso2.carbon.user.core.UserRealm;
@@ -69,9 +69,15 @@ public class TenantMgtAdminService extends AbstractAdmin {
         int tenantId = persistor.persistTenant(tenant, false, tenantInfoBean.getSuccessKey(),
                                 tenantInfoBean.getOriginatedService(),false);
         tenantInfoBean.setTenantId(tenantId);
-        
+
+        PrivilegedCarbonContext.startTenantFlow();
+
+        PrivilegedCarbonContext carbonContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        carbonContext.setTenantDomain(tenantDomain);
+        carbonContext.setTenantId(tenantId);
         TenantMgtUtil.addClaimsToUserStoreManager(tenant);
-        
+
+        PrivilegedCarbonContext.endTenantFlow();
         notifyTenantAddition(tenantInfoBean);
         //adding the subscription entry
         /*try {
